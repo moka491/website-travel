@@ -1,4 +1,4 @@
-import GlobeScene from "../components/globe/Globe";
+import GlobeScene from "../components/GlobeMap";
 
 const IndexPage = () => {
   return (
