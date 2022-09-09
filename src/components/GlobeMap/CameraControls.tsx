@@ -1,5 +1,5 @@
 import { extend, useFrame, useThree } from "@react-three/fiber";
-import { useRef } from "react";
+import { useEffect, useRef } from "react";
 import { OrbitControls } from "three-stdlib/controls/OrbitControls";
 
 extend({ OrbitControls });
@@ -11,6 +11,13 @@ export default function CameraControls() {
   } = useThree();
 
   const controls = useRef<OrbitControls>();
+
+  useEffect(() => {
+    // Initial position
+    camera.position.set(0, 20, 100);
+    controls.current.update();
+  }, []);
+
   useFrame(() => controls.current.update());
   return (
     // @ts-ignore

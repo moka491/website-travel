@@ -1,36 +1,91 @@
-import { useLoader } from "@react-three/fiber";
-import { TextureLoader } from "three";
-
-const GLOBE_RADIUS = 3;
+import { useTexture } from "@react-three/drei";
+import { Camera, useFrame } from "@react-three/fiber";
+import { useState } from "react";
+import { Spherical, Vector3 } from "three";
+import { GLOBE_POS as GLOBE_POSITION, GLOBE_RADIUS, LODS } from "./constants";
 
 type GlobeTileProps = {
   lodLevel: number;
-  latTiles: number;
-  lonTiles: number;
-  latIndex: number;
-  lonIndex: number;
-};
-
-type GlobeTileGeometryProps = {
-  latTiles: number;
-  lonTiles: number;
-  latIndex: number;
-  lonIndex: number;
+  coordX: number;
+  coordY: number;
+  tilesX: number;
+  tilesY: number;
 };
 
 type GlobeTileMaterialProps = {
   lodLevel: number;
-  latIndex: number;
-  lonIndex: number;
+  coordX: number;
+  coordY: number;
 };
+
+type SphereTileCoordinates = [
+  phiStart: number,
+  phiLength: number,
+  thetaStart: number,
+  thetaLength: number
+];
+
+function getSphereTileParams(
+  coordX: number,
+  coordY: number,
+  tilesX: number,
+  tilesY: number
+): SphereTileCoordinates {
+  const phiStart = (coordX / tilesX) * 2 * Math.PI;
+  const phiLength = (2 * Math.PI) / tilesX;
+  const thetaStart = (coordY / tilesY) * 1 * Math.PI;
+  const thetaLength = (1 * Math.PI) / tilesY;
+
+  return [phiStart, phiLength, thetaStart, thetaLength];
+}
+
+function getCameraDistanceToTile(
+  camera: Camera,
+  sphereTileCoords: SphereTileCoordinates
+): number {
+  const [phiStart, phiLength, thetaStart, thetaLength] = sphereTileCoords;
+
+  const coords = new Vector3().setFromSpherical(
+    new Spherical(
+      GLOBE_RADIUS,
+      thetaStart + thetaLength / 2,
+      phiStart + phiLength / 2 - 0.5 * Math.PI
+    )
+  );
+  return camera.position.distanceTo(coords);
+}
+
+function renderSubdividedGlobeTiles(
+  newLodLevel: number,
+  coordX: number,
+  coordY: number,
+  tilesX: number,
+  tilesY: number
+) {
+  const lod = LODS[newLodLevel];
+
+  return [...Array(lod.divY)].map((_, y) => {
+    return [...Array(lod.divX)].map((_, x) => {
+      const props: GlobeTileProps = {
+        lodLevel: newLodLevel,
+        coordX: coordX * lod.divX + x,
+        coordY: coordY * lod.divY + y,
+        tilesX: tilesX * lod.divX,
+        tilesY: tilesY * lod.divY,
+      };
+
+      return <GlobeTile {...props} />;
+    });
+  });
+}
 
 function GlobeTileMaterial({
   lodLevel,
-  latIndex,
-  lonIndex,
+  coordX,
+  coordY,
 }: GlobeTileMaterialProps) {
-  const [map] = useLoader(TextureLoader, [
-    `/public/assets/world-${lodLevel}-${latIndex}-${lonIndex}.png`,
+  const [map] = useTexture([
+    `/public/assets/world-${lodLevel}-${coordX}-${coordY}.png`,
   ]);
 
   return <meshStandardMaterial map={map} />;
@@ -40,32 +95,45 @@ function GlobeTileFallbackMaterial() {
   return <meshStandardMaterial color={Math.random() * 0xffffff} />;
 }
 
-function GlobeTileGeometry({
-  latTiles,
-  lonTiles,
-  latIndex,
-  lonIndex,
-}: GlobeTileGeometryProps) {
-  const phiLength = (2 * Math.PI) / lonTiles;
-  const phiStart = (lonIndex / lonTiles) * 2 * Math.PI;
-  const thetaLength = (1 * Math.PI) / latTiles;
-  const thetaStart = (latIndex / latTiles) * 1 * Math.PI;
-
-  return (
-    <sphereBufferGeometry
-      args={[GLOBE_RADIUS, 0, 0, phiStart, phiLength, thetaStart, thetaLength]}
-    />
-  );
-}
-
 export default function GlobeTile(props: GlobeTileProps) {
-  return (
-    <mesh>
-      <GlobeTileGeometry {...props} />
-      <GlobeTileFallbackMaterial />
-      {/* <Suspense fallback={<GlobeTileFallbackMaterial />}>
-        <GlobeTileMaterial {...props} />
-      </Suspense> */}
-    </mesh>
-  );
+  const { lodLevel, coordX, coordY, tilesX, tilesY } = props;
+
+  const sphereParams = getSphereTileParams(coordX, coordY, tilesX, tilesY);
+  const [subdivide, setSubdivide] = useState(false);
+
+  useFrame((state) => {
+    const cameraDistance = getCameraDistanceToTile(state.camera, sphereParams);
+
+    const shouldSubdivide =
+      lodLevel < LODS.length - 1 &&
+      cameraDistance < LODS[lodLevel + 1].distance;
+
+    if (subdivide !== shouldSubdivide) {
+      setSubdivide(shouldSubdivide);
+    }
+  });
+
+  if (subdivide) {
+    return (
+      <group>
+        {renderSubdividedGlobeTiles(
+          lodLevel + 1,
+          coordX,
+          coordY,
+          tilesX,
+          tilesY
+        )}
+      </group>
+    );
+  } else {
+    return (
+      <mesh position={GLOBE_POSITION}>
+        <sphereBufferGeometry args={[GLOBE_RADIUS, 0, 0, ...sphereParams]} />;
+        <GlobeTileFallbackMaterial />
+        {/* <Suspense fallback={<GlobeTileFallbackMaterial />}>
+            <GlobeTileMaterial {...props} />
+          </Suspense> */}
+      </mesh>
+    );
+  }
 }
