@@ -13,7 +13,8 @@
   },
   "scripts": {
     "start": "bun dev",
-    "build": "react-scripts build"
+    "build": "react-scripts build",
+    "generate-tiles": "node ./scripts/generate-map-tiles.js"
   },
   "eslintConfig": {
     "extends": [
