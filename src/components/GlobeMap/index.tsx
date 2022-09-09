@@ -18,7 +18,9 @@ export default function GlobeScene() {
             tilesY: 10,
           };
 
-          return <GlobeTile {...props} />;
+          const key = props.lodLevel + "-" + props.coordX + "-" + props.coordY;
+
+          return <GlobeTile key={key} {...props} />;
         });
       })}
     </Canvas>

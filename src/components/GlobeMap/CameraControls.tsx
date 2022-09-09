@@ -1,32 +1,21 @@
-import { extend, useFrame, useThree } from "@react-three/fiber";
-import { useEffect, useRef } from "react";
-import { OrbitControls } from "three-stdlib/controls/OrbitControls";
-
-extend({ OrbitControls });
+import { OrbitControls, PerspectiveCamera } from "@react-three/drei";
+import { Camera } from "@react-three/fiber";
+import { useRef } from "react";
+import { GLOBE_RADIUS } from "./constants";
 
 export default function CameraControls() {
-  const {
-    camera,
-    gl: { domElement },
-  } = useThree();
+  const virtualCamera = useRef<Camera>();
 
-  const controls = useRef<OrbitControls>();
-
-  useEffect(() => {
-    // Initial position
-    camera.position.set(0, 20, 100);
-    controls.current.update();
-  }, []);
-
-  useFrame(() => controls.current.update());
   return (
-    // @ts-ignore
-    <orbitControls
-      ref={controls}
-      args={[camera, domElement]}
-      enablePan={false}
-      enableDamping={true}
-      rotateSpeed={0.2}
-    />
+    <>
+      <PerspectiveCamera ref={virtualCamera} position={[0, 20, 100]} />
+      <OrbitControls
+        camera={virtualCamera.current}
+        minDistance={GLOBE_RADIUS + 2}
+        enablePan={false}
+        enableDamping={true}
+        rotateSpeed={0.2}
+      />
+    </>
   );
 }

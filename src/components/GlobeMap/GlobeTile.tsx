@@ -25,7 +25,7 @@ type SphereTileCoordinates = [
   thetaLength: number
 ];
 
-function getSphereTileParams(
+function getSphereTileCoords(
   coordX: number,
   coordY: number,
   tilesX: number,
@@ -74,7 +74,9 @@ function renderSubdividedGlobeTiles(
         tilesY: tilesY * lod.divY,
       };
 
-      return <GlobeTile {...props} />;
+      const key = props.lodLevel + "-" + props.coordX + "-" + props.coordY;
+
+      return <GlobeTile key={key} {...props} />;
     });
   });
 }
@@ -98,7 +100,7 @@ function GlobeTileFallbackMaterial() {
 export default function GlobeTile(props: GlobeTileProps) {
   const { lodLevel, coordX, coordY, tilesX, tilesY } = props;
 
-  const sphereParams = getSphereTileParams(coordX, coordY, tilesX, tilesY);
+  const sphereParams = getSphereTileCoords(coordX, coordY, tilesX, tilesY);
   const [subdivide, setSubdivide] = useState(false);
 
   useFrame((state) => {
@@ -128,7 +130,7 @@ export default function GlobeTile(props: GlobeTileProps) {
   } else {
     return (
       <mesh position={GLOBE_POSITION}>
-        <sphereBufferGeometry args={[GLOBE_RADIUS, 0, 0, ...sphereParams]} />;
+        <sphereBufferGeometry args={[GLOBE_RADIUS, 0, 0, ...sphereParams]} />
         <GlobeTileFallbackMaterial />
         {/* <Suspense fallback={<GlobeTileFallbackMaterial />}>
             <GlobeTileMaterial {...props} />
