@@ -1,15 +1,15 @@
 import { Vector3 } from "@react-three/fiber";
 
-export type Lod = {
+export type LOD = {
   divX: number;
   divY: number;
   distance: number;
 };
 
-export const LODS: Lod[] = [
+export const LODS: LOD[] = [
   {
-    divX: 2,
-    divY: 2,
+    divX: 16,
+    divY: 16,
     distance: 40,
   },
   {
@@ -20,7 +20,12 @@ export const LODS: Lod[] = [
   {
     divX: 2,
     divY: 2,
-    distance: 20,
+    distance: 10,
+  },
+  {
+    divX: 2,
+    divY: 2,
+    distance: 5,
   },
 ];
 
