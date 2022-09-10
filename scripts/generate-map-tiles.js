@@ -1,31 +1,92 @@
-const fs = require('fs');
-const execSync = require('child_process').execSync;
+const fs = require("fs");
+const path = require("path");
+const { Exception } = require("sass");
+const execSync = require("child_process").execSync;
 
-const inPath = './scripts/in/world.topo.bathy.200412.3x21600x10800.png'
-const outPath = './public/assets/globe'
+const inputImg = "./scripts/in/world.topo.bathy.200412.3x21600x10800.png";
+const tmpFolder = "./scripts/tmp";
+const outFolder = "./public/assets/globe";
 
 const LODS = [
-    {
-        tilesLat: 8,
-        tilesLon: 10,
-        tileSize: 256 
-    },
-    {
-        tilesLat: 15,
-        tilesLon: 20,
-        tileSize: 256 
-    },    {
-        tilesLat: 45,
-        tilesLon: 60,
-        tileSize: 256 
-    },
-    
-]
+  {
+    tilesX: 16,
+    tilesY: 16,
+    imgWidth: 128,
+  },
+  {
+    tilesX: 32,
+    tilesY: 32,
+    imgWidth: 128,
+  },
+  {
+    tilesX: 64,
+    tilesY: 64,
+    imgWidth: 128,
+  },
+  {
+    tilesX: 128,
+    tilesY: 128,
+    imgWidth: 128,
+  },
+];
 
-if (!fs.existsSync(outPath)){
-    fs.mkdirSync(outPath, { recursive: true });
+prepareEmptyPath(outFolder);
+
+LODS.forEach((lod, lodLevel) => {
+  console.info(`LOD Level ${lodLevel}`);
+  console.info("-> Clearing tmp folder");
+  prepareEmptyPath(tmpFolder);
+
+  console.info(`-> Generating ${lod.tilesX * lod.tilesY} tiles`);
+  generateLodImages(lod);
+
+  console.info("-> Mapping files to LOD coordinates");
+  mapToCoordinates(lod);
+
+  console.info("-> Moving files to assets folder");
+  moveToOutPath(lodLevel);
+});
+
+function prepareEmptyPath(path) {
+  if (fs.existsSync(path)) {
+    fs.rmdirSync(path, { recursive: true });
+  }
+
+  fs.mkdirSync(path, { recursive: true });
 }
 
-LODS.forEach((options, lod) => {
-    execSync(`convert ${inPath} -crop ${options.tilesLon}x${options.tilesLat}@ +repage +adjoin -resize ${options.tileSize}x${options.tileSize} ${outPath}/tile-${lod}-%d.png`)
-})
+function generateLodImages(lod) {
+  const digits = String(lod.tilesX * lod.tilesY).length;
+  const outImage = path.join(tmpFolder, `%0${digits}d.png`);
+
+  execSync(
+    `convert ${inputImg} -crop ${lod.tilesX}x${lod.tilesY}@ +repage +adjoin -resize ${lod.imgWidth}x${lod.imgWidth} ${outImage}`
+  );
+}
+
+function mapToCoordinates(lod) {
+  const files = fs.readdirSync(tmpFolder);
+
+  if (files.length !== lod.tilesX * lod.tilesY) {
+    throw new Exception(
+      "invalid number of generated images!" +
+        `expected ${lod.tilesX * lod.tilesY}, found ${files.length}`
+    );
+  }
+
+  files.forEach((file) => {
+    const fileNumber = parseInt(file);
+    const xCoord = fileNumber % lod.tilesX;
+    const yCoord = Math.floor(fileNumber / lod.tilesX);
+    const newFileName = xCoord + "," + yCoord + ".png";
+
+    fs.renameSync(
+      path.join(tmpFolder, file),
+      path.join(tmpFolder, newFileName)
+    );
+  });
+}
+
+function moveToOutPath(lodLevel) {
+  fs.renameSync(tmpFolder, path.join(outFolder, String(lodLevel)));
+}

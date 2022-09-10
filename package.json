@@ -14,7 +14,7 @@
   "scripts": {
     "start": "bun dev",
     "build": "react-scripts build",
-    "generate-tiles": "node ./scripts/generate-map-tiles.js"
+    "generate-globe-tiles": "node ./scripts/generate-map-tiles.js"
   },
   "eslintConfig": {
     "extends": [

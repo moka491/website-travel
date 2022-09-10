@@ -1,6 +1,6 @@
 import { useTexture } from "@react-three/drei";
 import { useFrame } from "@react-three/fiber";
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import { GLOBE_POS as GLOBE_POSITION, GLOBE_RADIUS, LODS } from "./constants";
 import {
   getCameraDistanceToTile,
@@ -20,14 +20,14 @@ function GlobeTileMaterial({
   coordY,
 }: GlobeTileMaterialProps) {
   const [map] = useTexture([
-    `/public/assets/world-${lodLevel}-${coordX}-${coordY}.png`,
+    `/public/assets/globe/${lodLevel}/${coordX},${coordY}.png`,
   ]);
 
   return <meshStandardMaterial map={map} />;
 }
 
 function GlobeTileFallbackMaterial() {
-  return <meshStandardMaterial color={Math.random() * 0xffffff} />;
+  return <meshStandardMaterial color={0x000} />;
 }
 
 export type GlobeTileProps = {
@@ -78,9 +78,9 @@ export function GlobeTile(props: GlobeTileProps) {
       <mesh position={GLOBE_POSITION}>
         <sphereBufferGeometry args={[GLOBE_RADIUS, 0, 0, ...sphereCoords]} />
         <GlobeTileFallbackMaterial />
-        {/* <Suspense fallback={<GlobeTileFallbackMaterial />}>
-            <GlobeTileMaterial {...props} />
-          </Suspense> */}
+        <Suspense fallback={<GlobeTileFallbackMaterial />}>
+          <GlobeTileMaterial {...props} />
+        </Suspense>
       </mesh>
     );
   }

@@ -4,10 +4,10 @@ import { Globe } from "./Globe";
 
 export default function GlobeScene() {
   return (
-    <Canvas>
+    <Canvas camera={{ position: [70, 70, 50] }}>
       <CameraControls />
       <ambientLight />
-      <pointLight position={[10, 10, 10]} />
+      <pointLight position={[10, 10, 80]} />
       <Globe />
     </Canvas>
   );
