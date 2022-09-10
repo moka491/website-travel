@@ -6,6 +6,7 @@ const execSync = require("child_process").execSync;
 const inputImg = "./scripts/in/world.topo.bathy.200412.3x21600x10800.png";
 const tmpFolder = "./scripts/tmp";
 const outFolder = "./public/assets/globe";
+const extension = "webp";
 
 const LODS = [
   {
@@ -26,7 +27,7 @@ const LODS = [
   {
     tilesX: 128,
     tilesY: 128,
-    imgWidth: 128,
+    imgWidth: 256,
   },
 ];
 
@@ -57,10 +58,10 @@ function prepareEmptyPath(path) {
 
 function generateLodImages(lod) {
   const digits = String(lod.tilesX * lod.tilesY).length;
-  const outImage = path.join(tmpFolder, `%0${digits}d.png`);
+  const outImage = path.join(tmpFolder, `%0${digits}d.${extension}`);
 
   execSync(
-    `convert ${inputImg} -crop ${lod.tilesX}x${lod.tilesY}@ +repage +adjoin -resize ${lod.imgWidth}x${lod.imgWidth} ${outImage}`
+    `convert ${inputImg} -crop ${lod.tilesX}x${lod.tilesY}@ +repage +adjoin -quality 90 -resize ${lod.imgWidth}x${lod.imgWidth} ${outImage}`
   );
 }
 
@@ -78,7 +79,7 @@ function mapToCoordinates(lod) {
     const fileNumber = parseInt(file);
     const xCoord = fileNumber % lod.tilesX;
     const yCoord = Math.floor(fileNumber / lod.tilesX);
-    const newFileName = xCoord + "," + yCoord + ".png";
+    const newFileName = `${xCoord},${yCoord}.${extension}`;
 
     fs.renameSync(
       path.join(tmpFolder, file),

@@ -20,7 +20,7 @@ function GlobeTileMaterial({
   coordY,
 }: GlobeTileMaterialProps) {
   const [map] = useTexture([
-    `/public/assets/globe/${lodLevel}/${coordX},${coordY}.png`,
+    `/public/assets/globe/${lodLevel}/${coordX},${coordY}.webp`,
   ]);
 
   return <meshStandardMaterial map={map} />;
