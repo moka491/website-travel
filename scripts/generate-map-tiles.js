@@ -3,7 +3,7 @@ const path = require("path");
 const { Exception } = require("sass");
 const execSync = require("child_process").execSync;
 
-const inputImg = "./scripts/in/world.topo.bathy.200412.3x21600x10800.png";
+const inputImg = "./scripts/in/world.topo.bathy.200408.3x21600x10800.png";
 const tmpFolder = "./scripts/tmp";
 const outFolder = "./public/assets/globe";
 const extension = "webp";
@@ -12,22 +12,21 @@ const LODS = [
   {
     tilesX: 16,
     tilesY: 16,
-    imgWidth: 128,
+    size: 128,
   },
   {
     tilesX: 32,
     tilesY: 32,
-    imgWidth: 128,
+    size: 128,
   },
   {
     tilesX: 64,
     tilesY: 64,
-    imgWidth: 128,
+    size: 128,
   },
   {
     tilesX: 128,
     tilesY: 128,
-    imgWidth: 256,
   },
 ];
 
@@ -60,8 +59,10 @@ function generateLodImages(lod) {
   const digits = String(lod.tilesX * lod.tilesY).length;
   const outImage = path.join(tmpFolder, `%0${digits}d.${extension}`);
 
+  const resizeArg = lod.size ? `-resize '${lod.size}x${lod.size}>'` : "";
+
   execSync(
-    `convert ${inputImg} -crop ${lod.tilesX}x${lod.tilesY}@ +repage +adjoin -quality 90 -resize ${lod.imgWidth}x${lod.imgWidth} ${outImage}`
+    `convert ${inputImg} -crop ${lod.tilesX}x${lod.tilesY}@ +repage +adjoin -quality 100 ${resizeArg} ${outImage}`
   );
 }
 
