@@ -31,6 +31,8 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
-# custom
-public/assets/globe
+# Custom
 scripts/in/
+
+# Local Netlify folder
+.netlify
