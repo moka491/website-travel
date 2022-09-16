@@ -9,7 +9,7 @@ export class RaycastLOD implements LODControl {
    */
   public subdivisionRays: number = 1;
 
-  public distanceSubdivide: number = 12;
+  public distanceSubdivide: number = 15;
   public distanceSimplify: number = 60;
 
   public raycaster: Raycaster = new Raycaster();
